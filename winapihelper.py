@@ -45,6 +45,8 @@ def kill_inactive_windows():
         try:
             window = win32gui.FindWindow(None, 'oneboss - erp.oneboss.com.br:10003 - '
                                                'Conexão de Área de Trabalho Remota')
+            if window == 0:
+                break
             threads = win32process.GetWindowThreadProcessId(window)
             for thread in threads:
                 try:
@@ -52,6 +54,24 @@ def kill_inactive_windows():
                     proc.kill()
                 except psutil.NoSuchProcess:
                     pass
+        except pywintypes.error:
+            break
+
+
+def kill_rdp_error_windows():
+    while True:
+        try:
+            window = win32gui.FindWindow(None, 'Conexão de Área de Trabalho Remota')
+            if window == 0:
+                break
+            threads = win32process.GetWindowThreadProcessId(window)
+            for thread in threads:
+                try:
+                    proc = psutil.Process(thread)
+                    proc.kill()
+                except psutil.NoSuchProcess:
+                    pass
+
         except pywintypes.error:
             break
 

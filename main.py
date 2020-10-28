@@ -1,6 +1,7 @@
 import time
 import sys
 
+import psutil
 import win32con
 
 import detection
@@ -116,14 +117,27 @@ class MainLoop:
                 ok_button = detection.find_ok_button(self.screenshot.current_npimg)
                 if is_valid_coords(ok_button[0]):
                     winapihelper.mouse_click(self.handle[1], ok_button)
-                    time.sleep(2)
+                    time.sleep(3)
                     self.update_screenshot()
                 else:
                     self.print_order_routine()
 
+                # checks if the systems tells us that theres nothing to be printed
+                check_if_printable = detection.check_if_cannot_print(self.screenshot.current_npimg)
+                if is_valid_coords(check_if_printable[0]):
+                    self.close_popups()
+                    self.finished = True
+                    self.successful = True
+                    return 1
+
+                # press tab, to unselect the file type combobox
+                winapihelper.keyboard_click(self.handle[1], win32con.VK_TAB)
+                time.sleep(.25)
+
                 save_to_file_button = detection.save_to_file_button(self.screenshot.current_npimg)
                 if is_valid_coords(save_to_file_button[0]):
                     winapihelper.mouse_click(self.handle[1], save_to_file_button)
+                    self.close_popups()
                     self.finished = True
                     self.successful = True
                 else:
@@ -143,10 +157,14 @@ class MainLoop:
             # gets the handle based on the PID
             self.handle = winapihelper.get_handle(self.pid)
             if self.pid == 0:
-                if self.handle[0] != 0:
-                    winapihelper.kill_inactive_windows()
-                winapihelper.open_rdp()
-                time.sleep(5)
+                try:
+                    winapihelper.kill_rdp_error_windows()
+                    if self.handle[0] != 0:
+                        winapihelper.kill_inactive_windows()
+                    winapihelper.open_rdp()
+                    time.sleep(5)
+                except psutil.AccessDenied:
+                    time.sleep(1)
             else:
                 if self.handle[0] != 0:
                     self.update_screenshot()
@@ -162,6 +180,7 @@ class MainLoop:
                     self.finished = True
                     self.successful = True
             time.sleep(1)
+        print(self.successful)
 
     def open_system(self):
         coords = detection.find_program_exe(self.screenshot.current_npimg)
@@ -181,11 +200,30 @@ class MainLoop:
                     break
         return True
 
+    def only_open_system(self):
+        while self.pid == 0:
+            self.check_if_connection_is_alive()
+            # gets the handle based on the PID
+            self.handle = winapihelper.get_handle(self.pid)
+            if self.pid == 0:
+                try:
+                    winapihelper.kill_rdp_error_windows()
+                    if self.handle[0] != 0:
+                        winapihelper.kill_inactive_windows()
+                    winapihelper.open_rdp()
+                    time.sleep(5)
+                except psutil.AccessDenied:
+                    time.sleep(1)
+            time.sleep(1)
+
 
 if __name__ == '__main__':
     if sys.argv.__len__() == 2:
-        print('imprimindo pedido ' + sys.argv[1])
         routine = MainLoop(sys.argv[1])
-        routine.run()
+        if sys.argv[1] == 'open':
+            routine.only_open_system()
+        else:
+            print('imprimindo pedido ' + sys.argv[1])
+            routine.run()
     else:
         print('numero de pedido invalido')

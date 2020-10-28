@@ -81,7 +81,7 @@ def find_orders_button(source, debug=False):
     template_active = load_template('orders_button_active.png')
     inactive_coords = get_coords(source, template, 'orders_button', debug)
     active_coords = get_coords(source, template_active, 'actived_order_button', debug)
-    return max(inactive_coords, active_coords), template
+    return max(inactive_coords[0], active_coords[0]), template
 
 
 def find_stock_manage_button(source, debug=False):
@@ -114,4 +114,7 @@ def save_to_file_button(source, debug=False):
     return get_coords(source, template, 'save_to_file_button', debug)
 
 
+def check_if_cannot_print(source, debug=False):
+    template = load_template('cannot_print.png')
+    return get_coords(source, template, 'cannot_print.png', debug)
 
