@@ -38,7 +38,7 @@ def get_coords(source, template, template_name, debug=False, threshold=.9):
 def check_if_system_is_open(source, debug=False):
     template = load_template('window_open_taskbar.png')
     coords = get_coords(source, template, 'window_open_taskbar', debug, .4)
-    return coords.__len__() > 0
+    return coords[0].__len__() > 0
 
 
 def find_program_exe(source, debug=False):
@@ -91,7 +91,7 @@ def find_stock_manage_button(source, debug=False):
 
 def find_search_invoice_button(source, debug=False):
     template = load_template('search_invoice_button.png')
-    return get_coords(source, template, 'search_invoice_button', debug)
+    return get_coords(source, template, 'search_invoice_button', debug, .8)
 
 
 def find_print_button(source, debug=False):
@@ -118,3 +118,7 @@ def check_if_cannot_print(source, debug=False):
     template = load_template('cannot_print.png')
     return get_coords(source, template, 'cannot_print.png', debug)
 
+
+def check_if_fake_cannot_print(source, debug=False):
+    template = load_template('cannot_print_2.png')
+    return get_coords(source, template, 'cannot_print_2.png', debug)

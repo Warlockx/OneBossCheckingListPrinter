@@ -10,7 +10,10 @@ from screenshot import Screenshot
 
 
 def is_valid_coords(coords):
-    return coords.__len__() > 0
+    if coords.__len__() > 0:
+        return coords[0].__len__() > 0
+    else:
+        return False
 
 
 class MainLoop:
@@ -52,6 +55,9 @@ class MainLoop:
             self.go_to_main_window()
 
     def open_print_order_window(self):
+        if is_valid_coords(detection.check_if_order_window_is_open(self.screenshot.current_npimg)):
+            return
+
         # look for the post sell button and clicks it
         button_coords = detection.find_post_sell_button(self.screenshot.current_npimg)
         if is_valid_coords(button_coords[0]):
@@ -80,8 +86,8 @@ class MainLoop:
     def print_order_routine(self):
         self.close_popups()
         # checks if the order window is already open
-        if detection.check_if_order_window_is_open(self.screenshot.current_npimg)[0].__len__() > 0:
-            search_invoice_button = detection.find_search_invoice_button(self.screenshot.current_npimg)
+        if is_valid_coords(detection.check_if_order_window_is_open(self.screenshot.current_npimg)):
+            search_invoice_button = detection.find_search_invoice_button(self.screenshot.current_npimg, True)
             if is_valid_coords(search_invoice_button[0]):
                 # we want the click to be slightly to the left, since we want to edit the
                 # textbox, not click the button
@@ -123,15 +129,16 @@ class MainLoop:
                     self.print_order_routine()
 
                 # checks if the systems tells us that theres nothing to be printed
-                check_if_printable = detection.check_if_cannot_print(self.screenshot.current_npimg)
-                if is_valid_coords(check_if_printable[0]):
+                check_if_printable = detection.check_if_cannot_print(self.screenshot.current_npimg, True)
+                check_if_fake_non_printable = detection.check_if_fake_cannot_print(self.screenshot.current_npimg, True)
+                if is_valid_coords(check_if_printable[0]) and not is_valid_coords(check_if_fake_non_printable):
                     self.close_popups()
                     self.finished = True
                     self.successful = True
                     return 1
 
                 # press tab, to unselect the file type combobox
-                winapihelper.keyboard_click(self.handle[1], win32con.VK_TAB)
+                winapihelper.keyboard_click(self.handle[1], win32con.VK_UP)
                 time.sleep(.25)
 
                 save_to_file_button = detection.save_to_file_button(self.screenshot.current_npimg)
@@ -192,6 +199,9 @@ class MainLoop:
                     print('waiting for the program to start.')
                     time.sleep(1)
                     self.update_screenshot()
+                elif tries == 30:
+                    winapihelper.mouse_click(self.handle[1], coords)
+                    winapihelper.mouse_click(self.handle[1], coords)
                 elif tries == 59:
                     self.finished = True
                     return False
@@ -212,6 +222,8 @@ class MainLoop:
                         winapihelper.kill_inactive_windows()
                     winapihelper.open_rdp()
                     time.sleep(5)
+                    self.update_screenshot()
+                    self.open_system()
                 except psutil.AccessDenied:
                     time.sleep(1)
             time.sleep(1)
