@@ -235,7 +235,11 @@ if __name__ == '__main__':
         if sys.argv[1] == 'open':
             routine.only_open_system()
         else:
-            print('imprimindo pedido ' + sys.argv[1])
-            routine.run()
+            order_number = sys.argv[1]
+            if order_number == 0:
+                print(True)
+            else:
+                print('imprimindo pedido ' + order_number)
+                routine.run()
     else:
         print('numero de pedido invalido')
