@@ -98,15 +98,6 @@ def get_window_size(handle):
 
 
 def keyboard_click(handle, key):
-    window = win32gui.FindWindow(None, 'oneboss - erp.oneboss.com.br:10003 - '
-                                       'Conexão de Área de Trabalho Remota')
-    try:
-        win32gui.SetForegroundWindow(handle)
-    except:
-        pass
-
-    time.sleep(.1)
-
     if isinstance(key, str) and key in printable:
         key = win32api.MapVirtualKey(ord(key), 2)
         win32api.PostMessage(handle, win32con.WM_KEYDOWN, key)
@@ -130,13 +121,8 @@ def mouse_click(handle, coords, offset=(0, 0)):
                    int(best_coords[1] + h / 2)+offset[1])
 
     coords_long = win32api.MAKELONG(best_coords[0], best_coords[1])
-    window = win32gui.FindWindow(None, 'oneboss - erp.oneboss.com.br:10003 - '
-                                       'Conexão de Área de Trabalho Remota')
-    try:
-        win32gui.SetForegroundWindow(handle)
-    except:
-        pass
-
     time.sleep(.5)
+
+    win32api.PostMessage(handle, win32con.WM_MOUSEACTIVATE)
     win32api.PostMessage(handle, win32con.WM_LBUTTONDOWN, 1, coords_long)
     win32api.PostMessage(handle, win32con.WM_LBUTTONUP, 0, coords_long)
