@@ -98,6 +98,7 @@ def get_window_size(handle):
 
 
 def keyboard_click(handle, key):
+    time.sleep(.2)
     if isinstance(key, str) and key in printable:
         key = win32api.MapVirtualKey(ord(key), 2)
         win32api.PostMessage(handle, win32con.WM_KEYDOWN, key)
