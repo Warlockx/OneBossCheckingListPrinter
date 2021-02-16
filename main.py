@@ -115,7 +115,7 @@ class MainLoop:
                 print_order_button = detection.find_print_order_button(self.screenshot.current_npimg)
                 if is_valid_coords(print_order_button[0]):
                     winapihelper.mouse_click(self.handle[1], print_order_button)
-                    time.sleep(1)
+                    time.sleep(3)
                     self.update_screenshot()
                 else:
                     self.print_order_routine()
@@ -123,7 +123,7 @@ class MainLoop:
                 ok_button = detection.find_ok_button(self.screenshot.current_npimg)
                 if is_valid_coords(ok_button[0]):
                     winapihelper.mouse_click(self.handle[1], ok_button)
-                    time.sleep(3)
+                    time.sleep(2)
                     self.update_screenshot()
                 else:
                     self.print_order_routine()
@@ -139,7 +139,7 @@ class MainLoop:
 
                 # press tab, to unselect the file type combobox
                 winapihelper.keyboard_click(self.handle[1], win32con.VK_UP)
-                time.sleep(.25)
+                time.sleep(2)
 
                 save_to_file_button = detection.save_to_file_button(self.screenshot.current_npimg)
                 if is_valid_coords(save_to_file_button[0]):
@@ -157,21 +157,31 @@ class MainLoop:
             self.open_print_order_window()
             self.print_order_routine()
 
+    def open_rdp(self):
+        # looks for the rdp connection
+        self.check_if_connection_is_alive()
+        # gets the handle based on the PID
+        self.handle = winapihelper.get_handle(self.pid)
+        # if theres no active rdp connections it will kill any
+        # inactive windows and try to open a new one
+        if self.pid == 0:
+            try:
+                winapihelper.kill_rdp_error_windows()
+                if self.handle[0] != 0:
+                    winapihelper.kill_inactive_windows()
+                winapihelper.open_rdp()
+                time.sleep(5)
+                return False
+            except psutil.AccessDenied:
+                time.sleep(1)
+                return False
+        else:
+            return True
+
     def run(self):
         while not self.finished:
-            # looks for the rdp connection
-            self.check_if_connection_is_alive()
-            # gets the handle based on the PID
-            self.handle = winapihelper.get_handle(self.pid)
-            if self.pid == 0:
-                try:
-                    winapihelper.kill_rdp_error_windows()
-                    if self.handle[0] != 0:
-                        winapihelper.kill_inactive_windows()
-                    winapihelper.open_rdp()
-                    time.sleep(5)
-                except psutil.AccessDenied:
-                    time.sleep(1)
+            if not self.open_rdp():
+                time.sleep(1)
             else:
                 if self.handle[0] != 0:
                     self.update_screenshot()
@@ -212,20 +222,12 @@ class MainLoop:
 
     def only_open_system(self):
         while self.pid == 0:
-            self.check_if_connection_is_alive()
-            # gets the handle based on the PID
-            self.handle = winapihelper.get_handle(self.pid)
-            if self.pid == 0:
-                try:
-                    winapihelper.kill_rdp_error_windows()
-                    if self.handle[0] != 0:
-                        winapihelper.kill_inactive_windows()
-                    winapihelper.open_rdp()
-                    time.sleep(5)
-                    self.update_screenshot()
+            self.open_rdp()
+            if self.handle[0] != 0:
+                self.update_screenshot()
+                while not detection.check_if_system_is_open(self.screenshot.current_npimg):
                     self.open_system()
-                except psutil.AccessDenied:
-                    time.sleep(1)
+                    time.sleep(5)
             time.sleep(1)
 
 
